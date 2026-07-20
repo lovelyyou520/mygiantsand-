@@ -470,48 +470,73 @@ AddToggle(settingsSec, "Auto Farm", "AutoFarm", function(state)
                     if coords then
                         local char = LocalPlayer.Character
                         if char and char:FindFirstChild("HumanoidRootPart") and VirtualInputManager then
-                            -- Locations requiring "E" hold (all locations up to the 2nd to last)
+                            -- Locations requiring key holds (all locations up to the 2nd to last)
                             for i = 1, #coords do
                                 if not Config.AutoFarm then break end
                                 if coords[i] then
                                     char.HumanoidRootPart.CFrame = coords[i]
                                     task.wait(0.2)
                                     
-                                    -- Hold E for 2 seconds
-                                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
-                                    task.wait(2)
-                                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+                                    if i == 2 then
+                                        -- Hold W for 3 seconds on the 2nd coordinate
+                                        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.W, false, game)
+                                        task.wait(2)
+                                        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.W, false, game)
+                                    else
+                                        -- Hold E for 2 seconds on all other coordinates
+                                        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+                                        task.wait(2)
+                                        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+                                    end
                                     
-                                    task.wait(2) -- Wait 2 seconds after releasing E
+                                    task.wait(2) -- Wait 2 seconds after releasing key
                                 end
                             end
                             
                             if not Config.AutoFarm then break end
                             
                             -- 4th location: Dynamic Toaster
-                            local toasters = plot:FindFirstChild("Toasters")
-                            if toasters then
-                                local toasterObject = toasters:FindFirstChild("Toaster" .. currentToaster)
-                                if toasterObject then
-                                    -- Teleport to the dynamic toaster location
-                                    pcall(function()
-                                        char.HumanoidRootPart.CFrame = toasterObject:GetPivot()
-                                    end)
-                                    task.wait(0.5) -- Wait a brief moment like before
-                                    
-                                    local amount = tonumber(Config["ToasterAmount" .. currentToaster]) or 100
-                                    if amount > 0 then
-                                        triggerNotification("Auto Farm: Duping Toaster " .. currentToaster .. "...", Color3.fromRGB(100, 200, 255))
-                                        task.spawn(function()
-                                            fireRemoteMultipleTimes(toasterObject, "toasters", amount)
-                                        end)
+                                local toasters = plot:FindFirstChild("Toasters")
+                                if toasters then
+                                    local toasterObject = toasters:FindFirstChild("Toaster" .. currentToaster)
+                                    if toasterObject then
+                                        -- Teleport to the CollectionButton1
+                                        local collectionFolder = plot:FindFirstChild("CollectionButton")
+                                        if collectionFolder then
+                                            local collectionBtn = collectionFolder:FindFirstChild("CollectionButton1")
+                                            if collectionBtn and collectionBtn:IsA("Model") or collectionBtn:IsA("BasePart") then
+                                                pcall(function()
+                                                    if collectionBtn:IsA("Model") then
+                                                        char.HumanoidRootPart.CFrame = collectionBtn:GetPivot()
+                                                    else
+                                                        char.HumanoidRootPart.CFrame = collectionBtn.CFrame
+                                                    end
+                                                end)
+                                                task.wait(0.5)
+                                            else
+                                                triggerNotification("Auto Farm: CollectionButton1 not found! Teleporting to Toaster instead.", Color3.fromRGB(255, 150, 50))
+                                                pcall(function() char.HumanoidRootPart.CFrame = toasterObject:GetPivot() end)
+                                                task.wait(0.5)
+                                            end
+                                        else
+                                            triggerNotification("Auto Farm: CollectionButton folder not found! Teleporting to Toaster instead.", Color3.fromRGB(255, 150, 50))
+                                            pcall(function() char.HumanoidRootPart.CFrame = toasterObject:GetPivot() end)
+                                            task.wait(0.5)
+                                        end
+                                        
+                                        local amount = tonumber(Config["ToasterAmount" .. currentToaster]) or 100
+                                        if amount > 0 then
+                                            triggerNotification("Auto Farm: Duping Toaster " .. currentToaster .. "...", Color3.fromRGB(100, 200, 255))
+                                            task.spawn(function()
+                                                fireRemoteMultipleTimes(toasterObject, "toasters", amount)
+                                            end)
+                                        end
+                                    else
+                                        triggerNotification("Auto Farm: Toaster " .. currentToaster .. " not found! Skipping...", Color3.fromRGB(255, 100, 100))
                                     end
                                 else
-                                    triggerNotification("Auto Farm: Toaster " .. currentToaster .. " not found! Skipping...", Color3.fromRGB(255, 100, 100))
+                                    triggerNotification("Auto Farm: Toasters folder not found!", Color3.fromRGB(255, 100, 100))
                                 end
-                            else
-                                triggerNotification("Auto Farm: Toasters folder not found!", Color3.fromRGB(255, 100, 100))
-                            end
                             
                             -- Cycle to next toaster
                             currentToaster = currentToaster + 1
