@@ -16,7 +16,7 @@ local Config = {
     AutoFarm = false,
 }
 
-local CORRECT_KEY = "1035"
+local CORRECT_KEY = "1200"
 local DISCORD_LINK = "https://discord.gg/rajeZXgYdT"
 
 local function create(class, props, parent)
